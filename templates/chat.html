@@ -1,56 +1,32 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <title>Chat</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        #chat-box {
-            border: 1px solid #ccc;
-            padding: 10px;
-            width: 300px;
-            height: 300px;
-            overflow-y: scroll;
-        }
-        .message {
-            margin: 5px 0;
-        }
-        .username {
-            font-weight: bold;
-        }
-    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.min.js"></script>
 </head>
 <body>
-    <h1>Welcome, {{ username }}</h1>
-    <a href="{{ url_for('logout') }}">Logout</a>
-
-    <div id="chat-box">
+    <h1>Chat</h1>
+    <div id="messages">
         {% for message in messages %}
-        <div class="message">
-            <span class="username">{{ message.username }}:</span> {{ message.text }}
-        </div>
+            <p><strong>{{ message.username }}:</strong> {{ message.text }}</p>
         {% endfor %}
     </div>
-    <form id="chat-form">
-        <input type="text" id="message" placeholder="Type a message" required>
-        <button type="submit">Send</button>
-    </form>
+    <input id="message" placeholder="Tapez un message...">
+    <button onclick="sendMessage()">Envoyer</button>
 
     <script>
-        $(document).ready(function() {
-            var socket = io.connect('http://' + document.domain + ':' + location.port);
+        var socket = io();
 
-            socket.on('receive_message', function(data) {
-                $('#chat-box').append('<div class="message"><span class="username">' + data.username + ':</span> ' + data.message + '</div>');
-            });
+        function sendMessage() {
+            var message = document.getElementById('message').value;
+            socket.emit('send_message', {message: message});
+            document.getElementById('message').value = '';
+        }
 
-            $('#chat-form').submit(function(event) {
-                event.preventDefault();
-                var message = $('#message').val();
-                socket.emit('send_message', {message: message});
-                $('#message').val('').focus();
-            });
+        socket.on('receive_message', function(data) {
+            var messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML += '<p><strong>' + data.username + ':</strong> ' + data.message + '</p>';
         });
     </script>
 </body>
